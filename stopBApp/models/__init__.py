@@ -1,2 +1,2 @@
 from .guest import Guest
-from .authenticated import Authenticateda
+from .authenticated import Authenticated
