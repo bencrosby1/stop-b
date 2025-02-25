@@ -299,6 +299,7 @@ p #password-group:hover {
     cursor: pointer;
     font-size: 16px;
     border-radius: 5px;
+    margin-bottom: 5px;
 }
 
 .confirm-delete-btn:hover {
