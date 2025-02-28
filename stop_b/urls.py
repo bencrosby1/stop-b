@@ -16,7 +16,6 @@ Including another URLconf
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.contrib.auth.views import LogoutView
 from django.shortcuts import redirect
 from django.urls import path
 import stopBApp.views as views
@@ -34,4 +33,7 @@ urlpatterns = [
     path('register/', views.Register.as_view(), name='register'),
     path('bustime/', views.Bustime.as_view(), name='bustime'),
     path('stopnearby/', views.location, name='stopnearby'),
+    path('account/', views.Account.as_view(), name='account'),
+    path('delete/', views.DeleteAccount, name='delete_account'),
+    path('edit_password/', views.EditPassword, name='edit_password'),
 ]
