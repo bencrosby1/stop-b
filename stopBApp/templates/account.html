@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - Stop B</title>
+    <link href="{% static 'account/style.css' %}" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <div class="logo">Stop B</div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#">View Bus Times</a></li>
+                    <li><a href="#">Find Bus Nearby</a></li>
+                    <li><a href="#">Map of Bus Locations</a></li>
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="#">View Saved Bus Stops</a></li>
+                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="edit-user-container">
+        <h2>Account Details</h2>
+
+        <form method="POST" action="{% url 'account' %}">
+            {% csrf_token %}
+            <div class="input-group">
+                <label for="username">Username</label>
+                <div class="input-container">
+                    <input type="text" name="username" id="username" value="{{ user.username }}" readonly>
+                    <img src="{% static 'icons/pencil.png' %}" class="edit-icon" onclick="enableEdit('username')">
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="email">Email</label>
+                <div class="input-container">
+                    <input type="email" name="email" id="email" value="{{ user.email }}" readonly>
+                    <img src="{% static 'icons/pencil.png' %}" class="edit-icon" onclick="enableEdit('email')">
+                </div>
+            </div>
+            <p><a href="#" id="password-group">Change Password</a></p>
+            
+            <table class="button-table">
+                <tr>
+                    <td colspan="2"><button type="submit" id="save-btn">Save Changes</button></td>
+                </tr>
+                <tr>
+                    <td><button type="button" id="delete-account-btn" class="delete-button">Delete Account</button></td>
+                    <td><a href="{% url 'home' %}" class="cancel-button">Cancel</a></td>
+                </tr>
+            </table>
+        </form>
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <p class="{{ message.tags }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </main>
+
+    <!-- Password Modal -->
+    <div class="password-modal" id="password-modal">
+        <div class="password-modal-content">
+            <h3>Change Password</h3>
+            <form method="POST" action="{% url 'edit_password' %}">
+                {% csrf_token %}
+                <input type="password" name="old_password" placeholder="Enter Old Password">
+                <input type="password" name="new_password1" placeholder="New Password">
+                <input type="password" name="new_password2" placeholder="Confirm New Password">
+                <button type="submit">Submit</button>
+            </form>
+            <button id="close-modal">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Delete Account Modal -->
+    <div class="delete-modal" id="delete-modal">
+        <div class="delete-modal-content">
+            <h3>Confirm Account Deletion</h3>
+            <p>Enter your password to confirm account deletion:</p>
+            <form method="POST" action="{% url 'delete_account' %}">
+                {% csrf_token %}
+                <input type="password" name="password" id="delete-password" placeholder="Enter Password" required>
+                <button type="submit" class="confirm-delete-btn">Confirm Delete</button>
+                <button type="button" id="close-delete-modal">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+<script src="{% static 'account/script.js' %}"></script>
+</body>
+</html>
