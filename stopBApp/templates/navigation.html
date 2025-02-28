@@ -26,9 +26,9 @@
         }
 
         function sendLocationToApp(latitude, longitude){
-            fetch('stopnearby/', {method: 'POST', headers: {
+            fetch('/stopnearby/', {method: 'POST', headers: {
                     'Content-Type' : 'application/json',
-                    'X-CSRFTToken' : '{{ csrf_token }}'
+                    'X-CSRFToken' : '{{ csrf_token }}'
                 },
                 body: JSON.stringify({
                     latitude: latitude,
@@ -40,7 +40,7 @@
                     console.log("Location saved.", data);
                 })
                 .catch(error => {
-                    console.log("Location could not be sabed.", error);
+                    console.log("Location could not be saved.", error);
                 });
         }
         window.onload = getLocation;
