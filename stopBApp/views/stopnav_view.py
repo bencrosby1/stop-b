@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.timezone import now
 from stopBApp.models import Location
 import json
 
@@ -11,7 +12,7 @@ def location(request):
             data = json.loads(request.body)
             latitude = data.get('latitude')
             longitude = data.get('longitude')
-            Location.objects.create(latitude=latitude, longitude=longitude)
+            Location.objects.create(latitude=latitude, longitude=longitude, timestamp=now())
             return JsonResponse({'status': 'success', 'latitude': latitude, 'longitude': longitude})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
