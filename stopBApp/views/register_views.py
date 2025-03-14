@@ -56,8 +56,9 @@ def validatePassword(password):
     return requirements
 
 def validateEmail(email):
-    pattern = r'^(?!.*\.\.)[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
+    pattern = r'^(?!.*\.\.)[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,6}$'
     return bool(re.match(pattern, email))
+
 
 
 
