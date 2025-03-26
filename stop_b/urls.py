@@ -14,8 +14,24 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib import messages
+from django.contrib.auth import logout
+from django.shortcuts import redirect
 from django.urls import path
+import stopBApp.views as views
+
+def custom_logout(request):
+    logout(request)
+    messages.success(request, "Logged out successfully!")
+    return redirect("home")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.Home.as_view(), name='home'),
+    path("logout/", custom_logout, name="logout"),
+    path('login/', views.Login.as_view(), name='login'),
+    path('register/', views.Register.as_view(), name='register'),
+    path('account/', views.Account.as_view(), name='account'),
+    path('delete/', views.DeleteAccount, name='delete_account'),
+    path('edit_password/', views.EditPassword, name='edit_password'),
 ]
