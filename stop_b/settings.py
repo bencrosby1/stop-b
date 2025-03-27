@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-1&$6##qr-^=6r1um8mks387hvoo%*=t!mfiy9s+)@t_je)c*2z'
 
 #API Key
-API_KEY = config('API_KEY')
+API_KEY = config('API_KEY', default='dummy-key-for-tests')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
