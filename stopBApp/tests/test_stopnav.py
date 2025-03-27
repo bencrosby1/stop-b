@@ -8,6 +8,8 @@ class StopNavTests(TestCase):
         self.client = Client()
         self.url = reverse('stopnearby')
 
+
+
     def test_get_navigation_template(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
