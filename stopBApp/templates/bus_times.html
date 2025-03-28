@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Bus Times</title>
+     {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'bus_times/style.css' %}">
+</head>
+<body>
+    <h1>Milwaukee Transit - View Bus Times</h1>
+
+    <label for="stop-id">Enter Stop ID:</label>
+    <input type="text" id="stop-id" placeholder="e.g., 1234">
+    <button onclick="fetchBusTimes()">View Bus Times</button>
+
+    <h3>Upcoming Buses:</h3>
+    <ul id="bus-times"></ul>
+
+    <script>
+        function fetchBusTimes() {
+            let stopId = document.getElementById("stop-id").value;
+            if (!stopId) {
+                alert("Please enter a valid Stop ID.");
+                return;
+            }
+
+            fetch(`/bus-times/${stopId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    let busList = document.getElementById("bus-times");
+                    busList.innerHTML = ""; // Clear old results
+
+                    if (data.error) {
+                        busList.innerHTML = `<li>Error: ${data.error}</li>`;
+                        return;
+                    }
+
+                    if (data.length === 0) {
+                        busList.innerHTML = "<li>No upcoming buses found at this stop.</li>";
+                        return;
+                    }
+
+                    data.forEach(bus => {
+                        let li = document.createElement("li");
+                        li.textContent = `Route ${bus.route_short_name} - Arrival: ${bus.arrival_time}`;
+                        busList.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching bus times:", error);
+                    document.getElementById("bus-times").innerHTML = "<li>Error loading data.</li>";
+                });
+        }
+    </script>
+</body>
+</html>
