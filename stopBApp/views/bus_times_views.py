@@ -21,6 +21,7 @@ def bus_times_page(request):
 
     return render(request, "bus_times.html")
 
+
 def get_bus_times(request, stop_id):
     try:
         # convert stop_id from string to integer
