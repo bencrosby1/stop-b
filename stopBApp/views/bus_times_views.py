@@ -14,6 +14,7 @@ stop_times_df = pd.read_csv(os.path.join(GTFS_FOLDER, "stop_times.txt"))
 #load to get route IDs and their short names
 routes_df = pd.read_csv(os.path.join(GTFS_FOLDER, "routes.txt"))
 
+
 trips_df = pd.read_csv(os.path.join(GTFS_FOLDER, "trips.txt"))
 
 def bus_times_page(request):
