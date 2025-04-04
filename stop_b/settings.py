@@ -25,6 +25,7 @@ SECRET_KEY = 'django-insecure-1&$6##qr-^=6r1um8mks387hvoo%*=t!mfiy9s+)@t_je)c*2z
 
 #API Key
 API_KEY = config('API_KEY')
+MAPS_API_KEY = config('MAPS_API_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

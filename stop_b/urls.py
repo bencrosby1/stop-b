@@ -36,4 +36,5 @@ urlpatterns = [
     path('account/', views.Account.as_view(), name='account'),
     path('delete/', views.DeleteAccount, name='delete_account'),
     path('edit_password/', views.EditPassword, name='edit_password'),
+    path('directions/"', views.Directions.as_view(), name='directions'),
 ]
