@@ -2,6 +2,7 @@ import pandas as pd
 import os
 from datetime import datetime
 from django.shortcuts import render
+from math import radians, sin, cos, sqrt, atan2
 from django.http import JsonResponse
 
 
@@ -13,6 +14,12 @@ calendar_dates_df = pd.read_csv(os.path.join(GTFS_FOLDER, "calendar_dates.txt"))
 stop_times_df = pd.read_csv(os.path.join(GTFS_FOLDER, "stop_times.txt"))
 #load to get route IDs and their short names
 routes_df = pd.read_csv(os.path.join(GTFS_FOLDER, "routes.txt"))
+
+stops_df = pd.read_csv(os.path.join(GTFS_FOLDER, "stops.txt"))
+
+stops_df["stop_lat"] = stops_df["stop_lat"].astype(float)
+stops_df["stop_lon"] = stops_df["stop_lon"].astype(float)
+
 
 
 trips_df = pd.read_csv(os.path.join(GTFS_FOLDER, "trips.txt"))
@@ -78,3 +85,32 @@ def get_bus_times(request, stop_id):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+def get_nearby_stops(request):
+    try:
+        lat = float(request.GET.get("lat"))
+        lon = float(request.GET.get("lon"))
+
+        def haversine(lat1, lon1, lat2, lon2):
+            R = 6371
+            dlat = radians(lat2 - lat1)
+            dlon = radians(lon2 - lon1)
+            a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+            return R * 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        nearby = []
+        for _, row in stops_df.iterrows():
+            d = haversine(lat, lon, row["stop_lat"], row["stop_lon"])
+            if d < 5.0:
+                nearby.append({
+                    "stop_id": row["stop_id"],
+                    "stop_name": row["stop_name"],
+                    "stop_lat": row["stop_lat"],
+                    "stop_lon": row["stop_lon"],
+                    "distance": round(d * 1000)
+                })
+
+        return JsonResponse(sorted(nearby, key=lambda x: x["distance"]), safe=False)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
