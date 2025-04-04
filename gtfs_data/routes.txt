@@ -1,0 +1,47 @@
+route_long_name,route_type,route_text_color,route_color,agency_id,route_id,route_url,route_desc,route_short_name
+Greenfield  - 43rd Street,3,,,MCTS,56,https://www.ridemcts.com/routes-schedules/56/,,56
+Vliet - 84th Street,3,,,MCTS,33,https://www.ridemcts.com/routes-schedules/33/,,33
+60th Street,3,,,MCTS,60,https://www.ridemcts.com/routes-schedules/60/,,60
+M.L. King - S.13th Street,3,,,MCTS,19,https://www.ridemcts.com/routes-schedules/19/,,19
+Brown Deer Road,3,,,MCTS,88,https://www.ridemcts.com/routes-schedules/88/,,88
+Silver Spring Drive,3,,,MCTS,63,https://www.ridemcts.com/routes-schedules/63/,,63
+35th Street,3,,,MCTS,35,https://www.ridemcts.com/routes-schedules/35/,,35
+Burleigh Street,3,,,MCTS,66,https://www.ridemcts.com/routes-schedules/66/,,66
+Port Washington Road,3,,,MCTS,68,https://www.ridemcts.com/routes-schedules/68/,,68
+6th Street,3,,,MCTS,80,https://www.ridemcts.com/routes-schedules/80/,,80
+Amazon Oak Creek,3,,,MCTS,81,https://www.ridemcts.com/routes-schedules/81/,,81
+RedLine,3,,,MCTS,RED,https://www.ridemcts.com/routes-schedules/RedLine/,,RED
+Forest Home - 16th Street,3,,,MCTS,24,https://www.ridemcts.com/routes-schedules/24/,,24
+S. 20th Street,3,,,MCTS,20,https://www.ridemcts.com/routes-schedules/20/,,20
+North Avenue,3,,,MCTS,21,https://www.ridemcts.com/routes-schedules/21/,,21
+Center Street,3,,,MCTS,22,https://www.ridemcts.com/routes-schedules/22/,,22
+Connect 1 Wisconsin Ave,3,,,MCTS,CN1,https://www.ridemcts.com/routes-schedules/connect1/,,CN1
+108th Street,3,,,MCTS,28,https://www.ridemcts.com/routes-schedules/28/,,28
+Fair Park - Hales Corners   UBUS,3,,,MCTS,44U,https://www.ridemcts.com/routes-schedules/44U/,,44U
+BlueLine,3,,,MCTS,BLU,https://www.ridemcts.com/routes-schedules/BlueLine/,,BLU
+Hopkins - Congress,3,,,MCTS,34,https://www.ridemcts.com/routes-schedules/34/,,34
+76th Street,3,,,MCTS,76,https://www.ridemcts.com/routes-schedules/76/,,76
+Holt - College   UBUS,3,,,MCTS,40U,https://www.ridemcts.com/routes-schedules/40U/,,40U
+GreenLine,3,,,MCTS,GRE,https://www.ridemcts.com/routes-schedules/GreenLine/,,GRE
+Sherman - Wisconsin,3,,,MCTS,30,https://www.ridemcts.com/routes-schedules/30/,,30
+92nd Street,3,,,MCTS,92,https://www.ridemcts.com/routes-schedules/92/,,92
+Via Rt 20 & Blueline,3,,,MCTS,RR3,https://www.ridemcts.com/routes-schedules/RR3/,,RR3
+Via PurpleLine,3,,,MCTS,RR2,https://www.ridemcts.com/routes-schedules/RR2/,,RR2
+Via Rt 19,3,,,MCTS,RR1,https://www.ridemcts.com/routes-schedules/RR1/,,RR1
+Humboldt,3,,,MCTS,14,https://www.ridemcts.com/routes-schedules/14/,,14
+Hampton Avenue,3,,,MCTS,11,https://www.ridemcts.com/routes-schedules/11/,,11
+Teutonia Avenue,3,,,MCTS,12,https://www.ridemcts.com/routes-schedules/12/,,12
+Holton - Kinnickinnic,3,,,MCTS,15,https://www.ridemcts.com/routes-schedules/15/,,15
+Villard Avenue,3,,,MCTS,58,https://www.ridemcts.com/routes-schedules/58/,,58
+Via Rt 12,3,,,MCTS,HF1,https://www.ridemcts.com/routes-schedules/HF1/,,HF1
+National - Greenfield,3,,,MCTS,18,https://www.ridemcts.com/routes-schedules/18/,,18
+Walnut - Appleton,3,,,MCTS,57,https://www.ridemcts.com/routes-schedules/57/,,57
+Via Rt 30 & Blueline,3,,,MCTS,HF2,https://www.ridemcts.com/routes-schedules/HF2/,,HF2
+Oklahoma Avenue,3,,,MCTS,51,https://www.ridemcts.com/routes-schedules/51/,,51
+Lincoln Avenue,3,,,MCTS,53,https://www.ridemcts.com/routes-schedules/53/,,53
+Clement - Pennsylvania,3,,,MCTS,52,https://www.ridemcts.com/routes-schedules/52/,,52
+Layton Avenue,3,,,MCTS,55,https://www.ridemcts.com/routes-schedules/55/,,55
+Mitchell - Burnham,3,,,MCTS,54,https://www.ridemcts.com/routes-schedules/54/,,54
+Brown Deer   UBUS,3,,,MCTS,49U,https://www.ridemcts.com/routes-schedules/49U/,,49U
+State - Highland,3,,,MCTS,31,https://www.ridemcts.com/routes-schedules/31/,,31
+PurpleLine,3,,,MCTS,PUR,https://www.ridemcts.com/routes-schedules/PurpleLine/,,PUR

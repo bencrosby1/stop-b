@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Milwaukee Transit - View Bus Times</title>
+    {% load static %}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .tabs button {
+            padding: 10px 18px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .tabs button.active {
+            background-color: #0056b3;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            font-size: 16px;
+            width: 200px;
+        }
+
+        button.view-btn {
+            padding: 8px 14px;
+            font-size: 16px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Milwaukee Transit - View Bus Times</h1>
+
+    <div class="tabs">
+        <button id="tab1-btn" class="active" onclick="showTab('tab1')">Enter Stop ID</button>
+        <button id="tab2-btn" onclick="showTab('tab2')">Find Stops Near Me</button>
+    </div>
+
+    <!-- Manual Entry Tab -->
+    <div id="tab1" class="tab-content active">
+        <input type="text" id="stop-id" placeholder="e.g., 2838">
+        <button class="view-btn" onclick="fetchBusTimes()">View Bus Times</button>
+
+        <h3>Upcoming Buses:</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Route</th>
+                    <th>Arrival Time</th>
+                </tr>
+            </thead>
+            <tbody id="bus-times"></tbody>
+        </table>
+    </div>
+
+    <!-- Google Maps Tab -->
+    <div id="tab2" class="tab-content">
+        <div id="map"></div>
+    </div>
+
+    <!-- Tab switching logic -->
+    <script>
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById(tabId + '-btn').classList.add('active');
+        }
+    </script>
+
+    <!-- View Bus Times by ID -->
+    <script>
+        function fetchBusTimes() {
+            let stopId = document.getElementById("stop-id").value;
+            if (!stopId) {
+                alert("Please enter a valid Stop ID.");
+                return;
+            }
+
+            fetch(`/bus-times/${stopId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    let busList = document.getElementById("bus-times");
+                    busList.innerHTML = "";
+
+                    if (data.error) {
+                        busList.innerHTML = `<tr><td colspan="2">Error: ${data.error}</td></tr>`;
+                        return;
+                    }
+
+                    data.forEach(bus => {
+                        let row = document.createElement("tr");
+                        row.innerHTML = `<td>${bus.route_short_name}</td><td>${bus.arrival_time}</td>`;
+                        busList.appendChild(row);
+                    });
+                });
+        }
+    </script>
+
+    
+    
+    <script>
+    let map;
+    let userMarker;
+    let stopMarkers = []; // clear old stop markers
+
+    function initMap() {
+        navigator.geolocation.getCurrentPosition(position => {
+            const userPos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: userPos,
+                zoom: 15
+            });
+
+            // Create a draggable marker for user's location
+            userMarker = new google.maps.Marker({
+                position: userPos,
+                map: map,
+                draggable: true,
+                title: "Drag to refine your location",
+                icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+            });
+
+          
+            fetchNearbyStops(userPos.lat, userPos.lng);
+
+            // When user moves the marker, refresh nearby stops
+            userMarker.addListener('dragend', function (event) {
+                const newLat = event.latLng.lat();
+                const newLng = event.latLng.lng();
+                fetchNearbyStops(newLat, newLng);
+            });
+        }, () => {
+            alert("Unable to access your location. Enable location permissions.");
+        });
+    }
+
+    function fetchNearbyStops(lat, lon) {
+        // Clear previous stop markers
+        stopMarkers.forEach(marker => marker.setMap(null));
+        stopMarkers = [];
+
+        fetch(`/get_nearby_stops/?lat=${lat}&lon=${lon}`)
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(stop => {
+                    const marker = new google.maps.Marker({
+                        position: {
+                            lat: stop.stop_lat,
+                            lng: stop.stop_lon
+                        },
+                        map: map,
+                        title: stop.stop_name
+                    });
+
+                    const info = new google.maps.InfoWindow({
+                        content: `
+                            <strong>${stop.stop_name}</strong><br>
+                            Stop ID: ${stop.stop_id}<br>
+                            <button onclick="selectStop('${stop.stop_id}')">Select This Stop</button>
+                        `
+                    });
+
+                    marker.addListener("click", () => {
+                        info.open(map, marker);
+                    });
+
+                    stopMarkers.push(marker);
+                });
+            });
+    }
+
+    function selectStop(id) {
+        showTab("tab1");
+        document.getElementById("stop-id").value = id;
+        fetchBusTimes();
+    }
+</script>
+
+
+    
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDCCzwe9WTHJ987IkkI4xz17cWxKmDWXMY&callback=initMap">
+    </script>
+</body>
+</html>
