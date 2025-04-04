@@ -18,6 +18,8 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.urls import path
+from stopBApp.views.bus_times_views import get_nearby_stops
+
 import stopBApp.views as views
 import stopBApp.views.bus_times_views as bus_times_views
 
@@ -40,4 +42,8 @@ urlpatterns = [
 
 path('bus-times/', bus_times_views.bus_times_page, name='bus-times-page'),
     path('bus-times/<str:stop_id>/', bus_times_views.get_bus_times, name='bus-times'),
+
+path('get_nearby_stops/', get_nearby_stops, name='get_nearby_stops'),
+
+
 ]
