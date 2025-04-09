@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Route Directions</title>
+    <style>
+      #map { height: 500px; width: 100%; }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap" async defer></script>
+    <script>
+      function initMap() {
+        const destination = {
+          lat: parseFloat('{{ destination_coords.0 }}'),
+          lng: parseFloat('{{ destination_coords.1 }}')
+        };
+        const defaultOrigin = {
+          lat: parseFloat('{{ origin_coords.0 }}'),
+          lng: parseFloat('{{ origin_coords.1 }}')
+        };
+
+        const map = new google.maps.Map(document.getElementById('map'), {
+          center: destination,
+          zoom: 12
+        });
+        const directionsService = new google.maps.DirectionsService();
+        const directionsRenderer = new google.maps.DirectionsRenderer({ map });
+
+        const requestDirections = (origin) => {
+          directionsService.route({
+            origin: origin,
+            destination: destination,
+            travelMode: google.maps.TravelMode.WALKING
+          }, (result, status) => {
+            if (status === google.maps.DirectionsStatus.OK) {
+              directionsRenderer.setDirections(result);
+            } else {
+              alert('Directions request failed due to ' + status);
+            }
+          });
+        };
+
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            pos => {
+              const userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+              map.setCenter(userCoords);
+              requestDirections(userCoords);
+            },
+            err => {
+              console.error("Geolocation error:", err.message);
+              requestDirections(defaultOrigin);
+            }
+          );
+        } else {
+          console.error("Geolocation not supported.");
+          requestDirections(defaultOrigin);
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Directions from Your Location to {{ destination }}</h1>
+    <div id="map"></div>
+  </body>
+</html>
