@@ -39,11 +39,9 @@ urlpatterns = [
     path('account/', views.Account.as_view(), name='account'),
     path('delete/', views.DeleteAccount, name='delete_account'),
     path('edit_password/', views.EditPassword, name='edit_password'),
-
-path('bus-times/', bus_times_views.bus_times_page, name='bus-times-page'),
+    path('directions/"', views.Directions.as_view(), name='directions'),
+    path('bus-times/', bus_times_views.bus_times_page, name='bus-times-page'),
     path('bus-times/<str:stop_id>/', bus_times_views.get_bus_times, name='bus-times'),
-
-path('get_nearby_stops/', get_nearby_stops, name='get_nearby_stops'),
-
-
+    path('get_nearby_stops/', get_nearby_stops, name='get_nearby_stops'),
 ]
+
