@@ -44,3 +44,4 @@ urlpatterns = [
     path('bus-times/<str:stop_id>/', bus_times_views.get_bus_times, name='bus-times'),
     path('get_nearby_stops/', get_nearby_stops, name='get_nearby_stops'),
 ]
+
