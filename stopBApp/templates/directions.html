@@ -121,7 +121,7 @@
       let selectedRouteIndex = 0;
       let loadingInterval = null;  // For cycling the loading text
 
-      // Clear existing route renderers and info windows
+      // Clear existing route renderers and info windows.
       function clearRenderers() {
         renderers.forEach(renderer => renderer.setMap(null));
         renderers = [];
@@ -130,7 +130,57 @@
         infoWindows.forEach(iw => iw.close());
         infoWindows = [];
       }
-      
+
+      // Helper function to strip HTML tags from a string.
+      function stripHtml(html) {
+        const tmp = document.createElement("DIV");
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || "";
+      }
+
+      // Helper: Custom format for each step.
+      function formatStepText(step, isFinal) {
+        let instruction = stripHtml(step.instructions).trim();
+        let distance = step.distance.text;
+
+        // Final step: "Destination will be on the left/right in ___ feet"
+        if (isFinal) {
+          let lowerInst = instruction.toLowerCase();
+          let side = lowerInst.includes("right") ? "right" : "left";
+          return `Destination will be on the ${side} in ${distance}`;
+        }
+        // Step starts with "Head ..."
+        else if (instruction.startsWith("Head")) {
+          // e.g. "Head east"
+          let parts = instruction.split(" ");
+          let direction = parts[1] || "";
+          return `Head ${direction} for ${distance}`;
+        }
+        // Step starts with "Turn ..."
+        else if (instruction.startsWith("Turn")) {
+          // Attempt to parse "Turn left/right ..." and possibly the street name.
+          // If no street name is found, fallback to "Turn left in ___"
+          let regex = /^Turn\s+(left|right)(?:\s+(?:onto\s+)?(.*))?/i;
+          let match = instruction.match(regex);
+          if (match) {
+            let turnDir = match[1];
+            let street = (match[2] || "").trim();
+            if (street) {
+              return `Turn ${turnDir} towards ${street} in ${distance}`;
+            } else {
+              return `Turn ${turnDir} in ${distance}`;
+            }
+          } else {
+            // If we can't parse it at all, fallback:
+            return `${instruction} - ${distance}`;
+          }
+        }
+        // Fallback: show original instruction with distance
+        else {
+          return `${instruction} - ${distance}`;
+        }
+      }
+
       // Update turn-by-turn directions under the map.
       function updateTurnByTurnDirections() {
         if (!currentDirectionsResponse) return;
@@ -139,24 +189,23 @@
         if (leg) {
           let directionsHtml = "<h3>Turn-by-Turn Directions:</h3>";
           leg.steps.forEach((step, index) => {
-            // step.instructions usually contains HTML (like "Turn left onto Main St")
-            directionsHtml += `<p>${step.instructions} - <strong>${step.distance.text}</strong></p>`;
+            const isFinal = (index === leg.steps.length - 1);
+            const formattedStep = formatStepText(step, isFinal);
+            directionsHtml += `<p>${formattedStep}</p>`;
           });
           document.getElementById('live-info').innerHTML = directionsHtml;
         }
       }
-      
-      // Render the routes; if in live navigation mode, only render the selected route.
+
+      // Render the routes; if in live navigation mode, render only the selected route.
       function renderRoutes(response) {
         clearRenderers();
         clearInfoWindows();
-        // Stop loading animation.
         if (loadingOverlay) loadingOverlay.style.display = 'none';
         currentDirectionsResponse = response;
         const routes = response.routes;
         
         if (!liveNavigation) {
-          // Build the routes list.
           const routesListContainer = document.getElementById('routes-list');
           routesListContainer.innerHTML = "";
           routes.forEach((route, index) => {
@@ -176,7 +225,6 @@
             const leg = route.legs[0];
             const distanceText = leg.distance.text;
             const durationText = leg.duration.text;
-            // Optional info window on the route.
             if (leg) {
               const midStep = leg.steps[Math.floor(leg.steps.length / 2)];
               const midpoint = midStep.start_location;
@@ -214,17 +262,16 @@
           updateTurnByTurnDirections();
         }
       }
-      
+
       // Request directions from a given origin.
       function requestDirections(origin) {
         clearRenderers();
         clearInfoWindows();
-        // Start the loading animation.
         if (loadingOverlay) {
           loadingOverlay.style.display = 'flex';
           loadingOverlay.innerText = "Getting Directions.";
         }
-        // Always request route alternatives to retain all routes.
+        // Always request route alternatives.
         directionsService.route({
           origin: origin,
           destination: destination,
@@ -239,7 +286,7 @@
           }
         });
       }
-      
+
       // Show a modal with route details. When confirmed, switch into live navigation mode.
       function showRouteModal(routeIndex, distanceText, durationText) {
         const modal = document.getElementById('route-modal');
@@ -249,19 +296,17 @@
         document.getElementById('confirm-route').onclick = function() {
           selectedRouteIndex = routeIndex;
           liveNavigation = true;
-          // Hide the routes list and modal.
           document.getElementById('routes-list').style.display = 'none';
           modal.style.display = 'none';
-          // Re-request directions using the confirmed route while keeping alternatives.
           const origin = lastUserPosition || defaultOrigin;
           requestDirections(origin);
         };
       }
-      
+
       function closeModal() {
         document.getElementById('route-modal').style.display = 'none';
       }
-      
+
       // Helper: compute distance (meters) between two coordinates.
       function computeDistance(coord1, coord2) {
         const R = 6371000;
@@ -274,7 +319,7 @@
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         return R * c;
       }
-      
+
       // Initialize the map and set up geolocation.
       function initMap() {
         destination = {
@@ -292,8 +337,8 @@
         });
         
         loadingOverlay = document.getElementById('loading');
-        
-        // Start loading animation: cycle dots.
+
+        // Start loading animation: cycle the dots.
         loadingInterval = setInterval(function() {
           if (loadingOverlay && loadingOverlay.style.display !== 'none') {
             let text = loadingOverlay.innerText;
@@ -316,7 +361,6 @@
         
         directionsService = new google.maps.DirectionsService();
         
-        // Get the initial user location.
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             pos => {
@@ -330,7 +374,6 @@
               requestDirections(defaultOrigin);
             }
           );
-          // Watch position for live updates.
           navigator.geolocation.watchPosition(
             pos => {
               const newUserCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -348,8 +391,7 @@
           requestDirections(defaultOrigin);
         }
       }
-      
-      // Close modal if clicked outside.
+
       window.onclick = function(event) {
         const modal = document.getElementById('route-modal');
         if (event.target === modal) {
