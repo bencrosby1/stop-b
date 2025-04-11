@@ -224,11 +224,12 @@
           loadingOverlay.style.display = 'flex';
           loadingOverlay.innerText = "Getting Directions.";
         }
+        // Always request route alternatives to retain all routes.
         directionsService.route({
           origin: origin,
           destination: destination,
           travelMode: google.maps.TravelMode.WALKING,
-          provideRouteAlternatives: liveNavigation ? false : true
+          provideRouteAlternatives: true
         }, (result, status) => {
           if (status === google.maps.DirectionsStatus.OK) {
             renderRoutes(result);
@@ -251,7 +252,7 @@
           // Hide the routes list and modal.
           document.getElementById('routes-list').style.display = 'none';
           modal.style.display = 'none';
-          // Re-request directions using the confirmed route.
+          // Re-request directions using the confirmed route while keeping alternatives.
           const origin = lastUserPosition || defaultOrigin;
           requestDirections(origin);
         };
