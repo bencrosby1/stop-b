@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from stopBApp.models import SavedBusLine, BusLine
 from decouple import config
+import xml.etree.ElementTree as ET
 
 API_KEY = config("API_KEY")
 url = f"https://realtime.ridemcts.com/bustime/api/v3/getroutes?key={API_KEY}"
@@ -13,7 +14,6 @@ def saved_bus_lines(request):
     """
     View to display saved bus lines for a logged-in user.
     Fetches all bus lines from the MCTS API and excludes saved ones.
-    (do not know where we are adding this too so implemented functionality for both AJAX and HTML rendering)
     """
     # Fetch saved bus lines for the logged-in user
     saved_bus_lines = SavedBusLine.objects.filter(user=request.user).select_related('bus_line')
@@ -22,9 +22,16 @@ def saved_bus_lines(request):
     try:
         response = requests.get(url)  # Replace with the actual MCTS API URL
         response.raise_for_status()
-        all_bus_lines_data = response.json().get("bustime-response", {}).get("route", [])  # Assuming the API returns JSON data
+        # Parse XML response
+        root = ET.fromstring(response.content)
+        all_bus_lines_data = [
+            {"rt": route.find("rt").text, "rtnm": route.find("rtnm").text}
+            for route in root.findall(".//route")
+        ]
     except requests.RequestException as e:
         return JsonResponse({"error": "Failed to fetch bus lines from the MCTS API."}, status=500)
+    except ET.ParseError as e:
+        return JsonResponse({"error": "Failed to parse XML response from the MCTS API."}, status=500)
 
     # Filter out saved bus lines
     saved_bus_line_ids = saved_bus_lines.values_list('bus_line__name', flat=True)  # Match by route name
