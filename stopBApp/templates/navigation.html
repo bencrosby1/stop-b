@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Get Nearby Stops</title>
+</head>
+<body>
+    <script>
+        function getLocation (){
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude
+
+                        console.log("Latitude: " + latitude, "Longitude: " + longitude);
+                        sendLocationToApp(latitude, longitude);
+                    },
+                    function (error) {
+                        console.error("Failed to fetch location: ", error.message)
+                    }
+                );
+            } else{
+                console.error("location cannot be fetched");
+            }
+        }
+
+        function sendLocationToApp(latitude, longitude){
+            fetch('/stopnearby/', {method: 'POST', headers: {
+                    'Content-Type' : 'application/json',
+                    'X-CSRFToken' : '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    latitude: latitude,
+                    longitude: longitude
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Location saved.", data);
+                })
+                .catch(error => {
+                    console.log("Location could not be saved.", error);
+                });
+        }
+        window.onload = getLocation;
+    </script>
+    <p>navigation system here</p>
+</body>
+</html>
