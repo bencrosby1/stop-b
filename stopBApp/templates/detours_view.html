@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Active Detours</title>
+</head>
+<body>
+    <h1>Active Detours</h1>
+    <ul>
+        {% for detour in detours %}
+            <li>
+                <strong>{{ detour.title }}</strong><br>
+                {{ detour.description }}<br>
+                Start: {{ detour.start_date }}<br>
+                End: {{ detour.end_date }}<br>
+                Affected Lines: {{ detour.affected_lines.all|join:", " }}
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

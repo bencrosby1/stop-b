@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Saved Bus Lines</title>
+</head>
+<body>
+    <h1>Saved Bus Lines</h1>
+    <ul>
+        {% for saved in saved_bus_lines %}
+            <li>
+                {{ saved.bus_line.name }}
+                <button onclick="unsaveBusLine({{ saved.bus_line.id }})">Unsave</button>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2>All Bus Lines</h2>
+    <ul>
+        {% for bus_line in all_bus_lines %}
+            <li>
+                {{ bus_line.name }}
+                <button onclick="saveBusLine({{ bus_line.id }})">Save</button>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        function saveBusLine(busLineId) {
+            fetch(`/save-bus-line/${busLineId}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload(); // Reload the page to reflect changes
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function unsaveBusLine(busLineId) {
+            fetch(`/unsave-bus-line/${busLineId}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload(); // Reload the page to reflect changes
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
