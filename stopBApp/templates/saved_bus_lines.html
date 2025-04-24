@@ -5,9 +5,9 @@
 </head>
 <body>
     <h1>Saved Bus Lines</h1>
-    <ul>
+    <ul id="saved-bus-lines-list">
         {% for saved in saved_bus_lines %}
-            <li>
+            <li id="saved-bus-line-{{ saved.bus_line.id }}">
                 {{ saved.bus_line.name }}
                 <button onclick="unsaveBusLine({{ saved.bus_line.id }})">Unsave</button>
             </li>
@@ -15,9 +15,9 @@
     </ul>
 
     <h2>All Bus Lines</h2>
-    <ul>
+    <ul id="all-bus-lines-list">
         {% for bus_line in all_bus_lines %}
-            <li>
+            <li id="all-bus-line-{{ bus_line.id }}">
                 {{ bus_line.name }}
                 <button onclick="saveBusLine({{ bus_line.id }})">Save</button>
             </li>
@@ -32,8 +32,24 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);
-                location.reload(); // Reload the page to reflect changes
+                if (data.message) {
+                    alert(data.message);
+                    // Move the bus line from "All Bus Lines" to "Saved Bus Lines"
+                    const busLineElement = document.getElementById(`all-bus-line-${busLineId}`);
+                    if (busLineElement) {
+                        busLineElement.remove();
+                        const savedList = document.getElementById('saved-bus-lines-list');
+                        const newSavedItem = document.createElement('li');
+                        newSavedItem.id = `saved-bus-line-${busLineId}`;
+                        newSavedItem.innerHTML = `
+                            ${data.name}
+                            <button onclick="unsaveBusLine(${busLineId})">Unsave</button>
+                        `;
+                        savedList.appendChild(newSavedItem);
+                    }
+                } else if (data.error) {
+                    alert(data.error);
+                }
             })
             .catch(error => console.error('Error:', error));
         }
@@ -45,8 +61,24 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);
-                location.reload(); // Reload the page to reflect changes
+                if (data.message) {
+                    alert(data.message);
+                    // Move the bus line from "Saved Bus Lines" to "All Bus Lines"
+                    const busLineElement = document.getElementById(`saved-bus-line-${busLineId}`);
+                    if (busLineElement) {
+                        busLineElement.remove();
+                        const allList = document.getElementById('all-bus-lines-list');
+                        const newAllItem = document.createElement('li');
+                        newAllItem.id = `all-bus-line-${busLineId}`;
+                        newAllItem.innerHTML = `
+                            ${data.name}
+                            <button onclick="saveBusLine(${busLineId})">Save</button>
+                        `;
+                        allList.appendChild(newAllItem);
+                    }
+                } else if (data.error) {
+                    alert(data.error);
+                }
             })
             .catch(error => console.error('Error:', error));
         }
