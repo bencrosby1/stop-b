@@ -10,13 +10,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='BusLine',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50)),
-            ],
-        ),
-        migrations.CreateModel(
             name='Location',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -24,18 +17,6 @@ class Migration(migrations.Migration):
                 ('longitude', models.FloatField()),
                 ('timestamp', models.DateTimeField()),
                 ('timestamp', models.DateTimeField(auto_now_add=True)),
-            ],
-        ),
-        migrations.CreateModel(
-            name='Detour',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=200)),
-                ('description', models.TextField()),
-                ('start_date', models.DateTimeField()),
-                ('end_date', models.DateTimeField()),
-                ('is_active', models.BooleanField(default=True)),
-                ('affected_lines', models.ManyToManyField(related_name='detours', to='stopBApp.busline')),
             ],
         ),
     ]
