@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,6 +22,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-1&$6##qr-^=6r1um8mks387hvoo%*=t!mfiy9s+)@t_je)c*2z'
+
+#API Key
+MAPS_API_KEY = config('MAPS_API_KEY')
+API_KEY = config('API_KEY', default='dummy-key-for-tests')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -105,6 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
+
 
 TIME_ZONE = 'UTC'
 

@@ -14,11 +14,11 @@
             <div class="logo">Stop B</div>
             <nav>
                 <ul class="nav-links">
-                    <li><a href="#">View Bus Times</a></li>
-                    <li><a href="#">Find Bus Nearby</a></li>
+                    <li><a href="{% url 'bus-times-page' %}">View Bus Times</a></li>
+                    <li><a href="{% url 'stopnearby' %}">Find Bus Nearby</a></li>
                     <li><a href="#">Map of Bus Locations</a></li>
                     {% if user.is_authenticated %}
-                        <li><a href="#">View Saved Bus Stops</a></li>
+                        <li><a href="saved-bus-lines">View Saved Bus Stops</a></li>
                         <li><a href="{% url 'account' %}">Account</a></li>
                         <li>
                             <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: inline;">
