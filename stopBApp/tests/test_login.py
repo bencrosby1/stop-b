@@ -36,3 +36,46 @@ class LoginViewTests(TestCase):
         messages = list(response.wsgi_request._messages)
         self.assertEqual(len(messages), 1)
         self.assertEqual(str(messages[0]), "Invalid username or password.")
+
+    def test_login_view_post_blank_credentials(self):
+        # Test POST request with no credentials
+        response = self.client.post(reverse("login"), {
+            "username": "",
+            "password": ""
+        })
+        self.assertRedirects(response, reverse("login"))
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), "Invalid username or password.")
+
+    def test_login_view_post_whitespace(self):
+        # Test successful POST with correct credentials and whitespace
+        response = self.client.post(reverse("login"), {
+            "username": "testuser   ",
+            "password": "   testpassword"
+        })
+        self.assertRedirects(response, reverse("home"))
+        self.assertTrue(response.wsgi_request.user.is_authenticated)
+
+    def test_login_view_post_case(self):
+        # Test POST request with correct username and password but incorrect casing
+        response = self.client.post(reverse("login"), {
+            "username": "TESTUSER",
+            "password": "TESTPASSWORD"
+        })
+        self.assertRedirects(response, reverse("login"))
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), "Invalid username or password.")
+
+    def test_login_view_redirect(self):
+        # Test redirect if user is already logged in
+        response = self.client.post(reverse("login"), {
+            "username": self.username,
+            "password": self.password
+        })
+        response = self.client.get(reverse("login"))
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, reverse("home"))
