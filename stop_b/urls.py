@@ -20,12 +20,10 @@ from django.shortcuts import redirect
 from django.urls import path
 from stopBApp.views.bus_times_views import get_nearby_stops
 from stopBApp.views.detours_view import active_detours
-from stopBApp.views.saved_bus_lines_view import saved_bus_lines
-from stopBApp.views.saved_bus_lines_view import saved_bus_lines, save_bus_line, unsave_bus_line
-
-
 import stopBApp.views as views
 import stopBApp.views.bus_times_views as bus_times_views
+from stopBApp.views.saved_lines_view import save_bus_line, unsave_bus_line,saved_lines
+
 
 def custom_logout(request):
     logout(request)
@@ -49,8 +47,8 @@ urlpatterns = [
     path('get_nearby_stops/', get_nearby_stops, name='get_nearby_stops'),
     ######################################################################
     path('active-detours/', active_detours, name='active_detours'),
-    path('saved-bus-lines/', saved_bus_lines, name='saved_bus_lines'),
-    path('save-bus-line/<int:bus_line_id>/', save_bus_line, name='save_bus_line'),
-    path('unsave-bus-line/<int:bus_line_id>/', unsave_bus_line, name='unsave_bus_line'),
+    path('save-bus-line/<str:bus_line_id>/', save_bus_line, name='save_bus_line'),
+    path('unsave-bus-line/<str:bus_line_id>/', unsave_bus_line, name='unsave_bus_line'),
+    path('saved-bus-lines/', saved_lines, name='saved_bus_lines'),
 ]
 
