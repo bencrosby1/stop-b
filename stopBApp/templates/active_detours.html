@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Active Detours</title>
+</head>
+<body>
+    <h1>Active Detours</h1>
+    <ul>
+        {% for detour in detours %}
+            <li>
+                <strong>Route:</strong> {{ detour.route|join:", " }}<br>
+                <strong>Description:</strong> {{ detour.description }}<br>
+                <strong>Start Date:</strong> {{ detour.start_date|date:"F j, Y, g:i A" }}<br>
+                <strong>End Date:</strong> {{ detour.end_date|date:"F j, Y, g:i A" }}
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
