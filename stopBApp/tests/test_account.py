@@ -45,6 +45,22 @@ class AccountViewsTests(TestCase):
         self.assertEqual(self.user.username, new_username)
         self.assertEqual(self.user.email, new_email)
 
+    def test_post_update_account_whitespace(self):
+        """POST request with valid new username and email should update the user and redirect with whitespace included."""
+        new_username = "updateduser    "
+        new_email = "updateduser@example.com    "
+        response = self.client.post(reverse("account"), {
+            "username": new_username,
+            "email": new_email,
+        })
+        # Expect a redirect to "account"
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("account"))
+        # Refresh the user instance and check changes.
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, new_username)
+        self.assertEqual(self.user.email, new_email)
+
     def test_post_update_account_username_taken(self):
         """POST request should not allow updating to a username that is already taken."""
         response = self.client.post(reverse("account"), {
@@ -74,6 +90,30 @@ class AccountViewsTests(TestCase):
         response = self.client.post(reverse("account"), {
             "username": "uniqueusername",
             "email": "invalid-email",  # invalid format
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "account.html")
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), "Invalid email.")
+
+    def test_post_update_account_blank_credentials(self):
+        """POST request should not allow a blank input."""
+        response = self.client.post(reverse("account"), {
+            "username": "", # invalid format
+            "email": "",  # invalid format
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "account.html")
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), "Invalid email.")
+
+    def test_post_update_account_special_charcters(self):
+        """POST request should not allow special characters."""
+        response = self.client.post(reverse("account"), {
+            "username": "在线中文输入", # invalid format
+            "email": "在线中文输入",  # invalid format
         })
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "account.html")
@@ -119,6 +159,19 @@ class AccountViewsTests(TestCase):
         messages = list(response.wsgi_request._messages)
         self.assertEqual(len(messages), 1)
         self.assertEqual(str(messages[0]), "Incorrect password.")
+
+    def test_edit_password_same_password(self):
+        """POST request should not change password if old password is the same as new password."""
+        response = self.client.post(reverse("edit_password"), {
+            "old_password": self.user_password,
+            "new_password1": self.user_password,
+            "new_password2": self.user_password,
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("account"))
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), "New password is the same as old password.")
 
     def test_edit_password_mismatch_new_password(self):
         """POST request should not change password if the new passwords do not match."""

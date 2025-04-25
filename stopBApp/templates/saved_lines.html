@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Bus Lines</title>
+    <script>
+        function saveBusLine(busLineId) {
+            fetch(`/save-bus-line/${busLineId}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    const busLineElement = document.getElementById(`bus-line-${busLineId}`);
+                    if (busLineElement) {
+                        busLineElement.remove();
+                        const savedList = document.getElementById('saved-bus-lines-list');
+                        const newSavedItem = document.createElement('li');
+                        newSavedItem.id = `saved-bus-line-${busLineId}`;
+                        newSavedItem.innerHTML = `
+                            ${data.name} (Route ID: ${data.route_id})
+                            <button onclick="unsaveBusLine('${busLineId}')">Unsave</button>
+                        `;
+                        savedList.appendChild(newSavedItem);
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function unsaveBusLine(busLineId) {
+            fetch(`/unsave-bus-line/${busLineId}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    const savedBusLineElement = document.getElementById(`saved-bus-line-${busLineId}`);
+                    if (savedBusLineElement) {
+                        savedBusLineElement.remove();
+                        const allList = document.getElementById('all-bus-lines-list');
+                        const newAllItem = document.createElement('li');
+                        newAllItem.id = `bus-line-${busLineId}`;
+                        newAllItem.innerHTML = `
+                            ${data.name} (Route ID: ${data.route_id})
+                            <button onclick="saveBusLine('${busLineId}')">Save</button>
+                        `;
+                        allList.appendChild(newAllItem);
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    <h1>Saved Bus Lines</h1>
+    <ul id="saved-bus-lines-list">
+        {% for bus_line in all_bus_lines %}
+            {% if bus_line.id in saved_bus_line_ids %}
+                <li id="saved-bus-line-{{ bus_line.route_id }}">
+                    {{ bus_line.name }} (Route ID: {{ bus_line.route_id }})
+                    <button onclick="unsaveBusLine('{{ bus_line.route_id }}')">Unsave</button>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+
+    <h2>All Bus Lines</h2>
+    <ul id="all-bus-lines-list">
+        {% for bus_line in all_bus_lines %}
+            {% if bus_line.id not in saved_bus_line_ids %}
+                <li id="bus-line-{{ bus_line.route_id }}">
+                    {{ bus_line.name }} (Route ID: {{ bus_line.route_id }})
+                    <button onclick="saveBusLine('{{ bus_line.route_id }}')">Save</button>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</body>
+</html>
