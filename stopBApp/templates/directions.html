@@ -107,317 +107,392 @@
       }
     </style>
     <!-- Load the Google Maps JavaScript API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap" async defer></script>
-    <script>
-      // Global variables
-      let map, userLocationCircle, loadingOverlay;
-      let renderers = [];
-      let infoWindows = [];
-      let lastUserPosition = null;
-      let directionsService;
-      let destination, defaultOrigin;
-      let currentDirectionsResponse = null;
-      let liveNavigation = false;
-      let selectedRouteIndex = 0;
-      let loadingInterval = null;  // For cycling the loading text
-
-      // Clear existing route renderers and info windows.
-      function clearRenderers() {
-        renderers.forEach(renderer => renderer.setMap(null));
-        renderers = [];
-      }
-      function clearInfoWindows() {
-        infoWindows.forEach(iw => iw.close());
-        infoWindows = [];
-      }
-
-      // Helper function to strip HTML tags from a string.
-      function stripHtml(html) {
-        const tmp = document.createElement("DIV");
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || "";
-      }
-
-      // Helper: Custom format for each step.
-      function formatStepText(step, isFinal) {
-        let instruction = stripHtml(step.instructions).trim();
-        let distance = step.distance.text;
-
-        // Final step: "Destination will be on the left/right in ___ feet"
-        if (isFinal) {
-          let lowerInst = instruction.toLowerCase();
-          let side = lowerInst.includes("right") ? "right" : "left";
-          return `Destination will be on the ${side} in ${distance}`;
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}" async defer></script>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Route Directions</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          background: #f4f4f4;
+          margin: 0;
+          padding: 0;
         }
-        // Step starts with "Head ..."
-        else if (instruction.startsWith("Head")) {
-          // e.g. "Head east"
-          let parts = instruction.split(" ");
-          let direction = parts[1] || "";
-          return `Head ${direction} for ${distance}`;
+    
+        .container {
+          max-width: 900px;
+          margin: 20px auto;
+          padding: 0 20px;
         }
-        // Step starts with "Turn ..."
-        else if (instruction.startsWith("Turn")) {
-          // Attempt to parse "Turn left/right ..." and possibly the street name.
-          // If no street name is found, fallback to "Turn left in ___"
-          let regex = /^Turn\s+(left|right)(?:\s+(?:onto\s+)?(.*))?/i;
-          let match = instruction.match(regex);
-          if (match) {
-            let turnDir = match[1];
-            let street = (match[2] || "").trim();
-            if (street) {
-              return `Turn ${turnDir} towards ${street} in ${distance}`;
-            } else {
-              return `Turn ${turnDir} in ${distance}`;
+    
+        .map-wrapper {
+          position: relative;
+          border: 1px solid #ddd;
+          background: #fff;
+        }
+    
+        #map {
+          height: 500px;
+          width: 100%;
+        }
+    
+        #loading {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 500px;
+          background: rgba(255, 255, 255, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          color: #333;
+          z-index: 1000;
+        }
+    
+        #routes-list {
+          margin-top: 10px;
+          padding: 10px;
+          background: #fff;
+          border: 1px solid #ddd;
+        }
+    
+        .route-item {
+          padding: 8px;
+          border-bottom: 1px solid #eee;
+          cursor: pointer;
+        }
+    
+        .route-item:hover {
+          background: #f0f0f0;
+        }
+    
+        #live-info {
+          margin-top: 10px;
+          padding: 10px;
+          background: #fff;
+          border: 1px solid #ddd;
+          font-size: 16px;
+        }
+    
+        .modal {
+          display: none;
+          position: fixed;
+          z-index: 2000;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          overflow: auto;
+          background: rgba(0,0,0,0.5);
+        }
+    
+        .modal-content {
+          background: #fff;
+          margin: 15% auto;
+          padding: 20px;
+          border: 1px solid #888;
+          width: 80%;
+          max-width: 400px;
+          text-align: center;
+        }
+    
+        .close {
+          color: #aaa;
+          float: right;
+          font-size: 28px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+    
+        .close:hover,
+        .close:focus {
+          color: black;
+        }
+    
+        button {
+          padding: 10px 20px;
+          margin-top: 10px;
+          border: none;
+          background: #4285F4;
+          color: #fff;
+          cursor: pointer;
+          font-size: 16px;
+        }
+    
+        button:hover {
+          background: #3367d6;
+        }
+      </style>
+    
+      <!-- ✅ FIXED: No callback param here -->
+      <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}" async defer></script>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Directions to {{ destination }}</h1>
+        <div class="map-wrapper">
+          <div id="map"></div>
+          <div id="loading">Getting Directions.</div>
+        </div>
+        <div id="routes-list"></div>
+        <div id="live-info"></div>
+      </div>
+    
+      <!-- Modal for route selection confirmation -->
+      <div id="route-modal" class="modal">
+        <div class="modal-content">
+          <span class="close" id="modal-close" onclick="closeModal()">&times;</span>
+          <p id="modal-text"></p>
+          <button id="confirm-route">Confirm Navigation</button>
+        </div>
+      </div>
+    
+      <script>
+        let map, userLocationCircle, loadingOverlay;
+        let renderers = [], infoWindows = [];
+        let lastUserPosition = null;
+        let directionsService;
+        let destination, defaultOrigin;
+        let currentDirectionsResponse = null;
+        let liveNavigation = false;
+        let selectedRouteIndex = 0;
+        let loadingInterval = null;
+    
+        function clearRenderers() {
+          renderers.forEach(r => r.setMap(null));
+          renderers = [];
+        }
+    
+        function clearInfoWindows() {
+          infoWindows.forEach(iw => iw.close());
+          infoWindows = [];
+        }
+    
+        function stripHtml(html) {
+          const tmp = document.createElement("DIV");
+          tmp.innerHTML = html;
+          return tmp.textContent || tmp.innerText || "";
+        }
+    
+        function formatStepText(step, isFinal) {
+          let instruction = stripHtml(step.instructions).trim();
+          let distance = step.distance.text;
+    
+          if (isFinal) {
+            let lower = instruction.toLowerCase();
+            let side = lower.includes("right") ? "right" : "left";
+            return `Destination will be on the ${side} in ${distance}`;
+          } else if (instruction.startsWith("Head")) {
+            let parts = instruction.split(" ");
+            let direction = parts[1] || "";
+            return `Head ${direction} for ${distance}`;
+          } else if (instruction.startsWith("Turn")) {
+            let match = instruction.match(/^Turn\s+(left|right)(?:\s+(?:onto\s+)?(.*))?/i);
+            if (match) {
+              let turnDir = match[1];
+              let street = (match[2] || "").trim();
+              return street ? `Turn ${turnDir} towards ${street} in ${distance}` : `Turn ${turnDir} in ${distance}`;
             }
-          } else {
-            // If we can't parse it at all, fallback:
-            return `${instruction} - ${distance}`;
           }
-        }
-        // Fallback: show original instruction with distance
-        else {
           return `${instruction} - ${distance}`;
         }
-      }
-
-      // Update turn-by-turn directions under the map.
-      function updateTurnByTurnDirections() {
-        if (!currentDirectionsResponse) return;
-        const selectedRoute = currentDirectionsResponse.routes[selectedRouteIndex];
-        const leg = selectedRoute.legs[0];
-        if (leg) {
-          let directionsHtml = "<h3>Turn-by-Turn Directions:</h3>";
-          leg.steps.forEach((step, index) => {
-            const isFinal = (index === leg.steps.length - 1);
-            const formattedStep = formatStepText(step, isFinal);
-            directionsHtml += `<p>${formattedStep}</p>`;
-          });
-          document.getElementById('live-info').innerHTML = directionsHtml;
+    
+        function updateTurnByTurnDirections() {
+          if (!currentDirectionsResponse) return;
+          const leg = currentDirectionsResponse.routes[selectedRouteIndex].legs[0];
+          if (leg) {
+            let html = "<h3>Turn-by-Turn Directions:</h3>";
+            leg.steps.forEach((step, i) => {
+              html += `<p>${formatStepText(step, i === leg.steps.length - 1)}</p>`;
+            });
+            document.getElementById('live-info').innerHTML = html;
+          }
         }
-      }
-
-      // Render the routes; if in live navigation mode, render only the selected route.
-      function renderRoutes(response) {
-        clearRenderers();
-        clearInfoWindows();
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
-        currentDirectionsResponse = response;
-        const routes = response.routes;
-        
-        if (!liveNavigation) {
-          const routesListContainer = document.getElementById('routes-list');
-          routesListContainer.innerHTML = "";
-          routes.forEach((route, index) => {
+    
+        function renderRoutes(response) {
+          clearRenderers();
+          clearInfoWindows();
+          if (loadingOverlay) loadingOverlay.style.display = 'none';
+          currentDirectionsResponse = response;
+    
+          const routesList = document.getElementById('routes-list');
+          routesList.innerHTML = "";
+    
+          if (!liveNavigation) {
+            response.routes.forEach((route, index) => {
+              const renderer = new google.maps.DirectionsRenderer({
+                map: map,
+                directions: response,
+                routeIndex: index,
+                suppressMarkers: false,
+                polylineOptions: {
+                  strokeColor: index === 0 ? '#0000FF' : '#FF0000',
+                  strokeOpacity: 1.0,
+                  strokeWeight: index === 0 ? 6 : 4
+                }
+              });
+              renderers.push(renderer);
+    
+              const leg = route.legs[0];
+              const mid = leg.steps[Math.floor(leg.steps.length / 2)].start_location;
+              const info = new google.maps.InfoWindow({
+                content: `Route ${index+1}: ${leg.distance.text}, ${leg.duration.text}`,
+                position: mid
+              });
+              info.open(map);
+              infoWindows.push(info);
+    
+              const item = document.createElement('div');
+              item.className = "route-item";
+              item.innerHTML = `<strong>Route ${index+1}</strong>: ${leg.distance.text}, ${leg.duration.text}`;
+              item.onclick = () => showRouteModal(index, leg.distance.text, leg.duration.text);
+              routesList.appendChild(item);
+            });
+          } else {
             const renderer = new google.maps.DirectionsRenderer({
               map: map,
               directions: response,
-              routeIndex: index,
+              routeIndex: selectedRouteIndex,
               suppressMarkers: false,
               polylineOptions: {
-                strokeColor: index === 0 ? '#0000FF' : '#FF0000',
-                strokeOpacity: index === 0 ? 1.0 : 0.8,
-                strokeWeight: index === 0 ? 6 : 4
+                strokeColor: '#0000FF',
+                strokeOpacity: 1.0,
+                strokeWeight: 6
               }
             });
             renderers.push(renderer);
-            
-            const leg = route.legs[0];
-            const distanceText = leg.distance.text;
-            const durationText = leg.duration.text;
-            if (leg) {
-              const midStep = leg.steps[Math.floor(leg.steps.length / 2)];
-              const midpoint = midStep.start_location;
-              const infoWindow = new google.maps.InfoWindow({
-                content: `Route ${index+1}: ${distanceText}, ${durationText}`,
-                position: midpoint
-              });
-              infoWindow.open(map);
-              infoWindows.push(infoWindow);
-            }
-            
-            // Build clickable list item for route selection.
-            const routeItem = document.createElement('div');
-            routeItem.className = "route-item";
-            routeItem.innerHTML = `<strong>Route ${index+1}</strong>: ${distanceText}, ${durationText}`;
-            routeItem.onclick = function() {
-              showRouteModal(index, distanceText, durationText);
-            };
-            routesListContainer.appendChild(routeItem);
-          });
-        } else {
-          // Live navigation: render only the selected route.
-          const renderer = new google.maps.DirectionsRenderer({
-            map: map,
-            directions: response,
-            routeIndex: selectedRouteIndex,
-            suppressMarkers: false,
-            polylineOptions: {
-              strokeColor: '#0000FF',
-              strokeOpacity: 1.0,
-              strokeWeight: 6
-            }
-          });
-          renderers.push(renderer);
-          updateTurnByTurnDirections();
-        }
-      }
-
-      // Request directions from a given origin.
-      function requestDirections(origin) {
-        clearRenderers();
-        clearInfoWindows();
-        if (loadingOverlay) {
-          loadingOverlay.style.display = 'flex';
-          loadingOverlay.innerText = "Getting Directions.";
-        }
-        // Always request route alternatives.
-        directionsService.route({
-          origin: origin,
-          destination: destination,
-          travelMode: google.maps.TravelMode.WALKING,
-          provideRouteAlternatives: true
-        }, (result, status) => {
-          if (status === google.maps.DirectionsStatus.OK) {
-            renderRoutes(result);
-          } else {
-            alert('Directions request failed due to ' + status);
-            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            updateTurnByTurnDirections();
           }
-        });
-      }
-
-      // Show a modal with route details. When confirmed, switch into live navigation mode.
-      function showRouteModal(routeIndex, distanceText, durationText) {
-        const modal = document.getElementById('route-modal');
-        const modalText = document.getElementById('modal-text');
-        modalText.innerHTML = `Route ${routeIndex+1}: ${distanceText}, ${durationText}.<br>Start live navigation within our app?`;
-        modal.style.display = 'block';
-        document.getElementById('confirm-route').onclick = function() {
-          selectedRouteIndex = routeIndex;
-          liveNavigation = true;
-          document.getElementById('routes-list').style.display = 'none';
-          modal.style.display = 'none';
-          const origin = lastUserPosition || defaultOrigin;
-          requestDirections(origin);
-        };
-      }
-
-      function closeModal() {
-        document.getElementById('route-modal').style.display = 'none';
-      }
-
-      // Helper: compute distance (meters) between two coordinates.
-      function computeDistance(coord1, coord2) {
-        const R = 6371000;
-        const toRad = x => x * Math.PI / 180;
-        const dLat = toRad(coord2.lat - coord1.lat);
-        const dLon = toRad(coord2.lng - coord1.lng);
-        const a = Math.sin(dLat/2) ** 2 +
-                  Math.cos(toRad(coord1.lat)) * Math.cos(toRad(coord2.lat)) *
-                  Math.sin(dLon/2) ** 2;
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-      }
-
-      // Initialize the map and set up geolocation.
-      function initMap() {
-        destination = {
-          lat: parseFloat('{{ destination_coords.0 }}'),
-          lng: parseFloat('{{ destination_coords.1 }}')
-        };
-        defaultOrigin = {
-          lat: parseFloat('{{ origin_coords.0 }}'),
-          lng: parseFloat('{{ origin_coords.1 }}')
-        };
-        
-        map = new google.maps.Map(document.getElementById('map'), {
-          center: destination,
-          zoom: 13
-        });
-        
-        loadingOverlay = document.getElementById('loading');
-
-        // Start loading animation: cycle the dots.
-        loadingInterval = setInterval(function() {
-          if (loadingOverlay && loadingOverlay.style.display !== 'none') {
-            let text = loadingOverlay.innerText;
-            let baseText = "Getting Directions";
-            let dotCount = (text.match(/\./g) || []).length;
-            dotCount = (dotCount + 1) % 4;
-            loadingOverlay.innerText = baseText + ".".repeat(dotCount);
-          }
-        }, 500);
-        
-        userLocationCircle = new google.maps.Circle({
-          map: map,
-          radius: 20,
-          fillColor: '#0000FF',
-          fillOpacity: 0.5,
-          strokeColor: '#0000FF',
-          strokeOpacity: 0.8,
-          strokeWeight: 2
-        });
-        
-        directionsService = new google.maps.DirectionsService();
-        
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            pos => {
-              const userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-              lastUserPosition = userCoords;
-              map.setCenter(userCoords);
-              requestDirections(userCoords);
-            },
-            err => {
-              console.error("Geolocation error:", err.message);
-              requestDirections(defaultOrigin);
-            }
-          );
-          navigator.geolocation.watchPosition(
-            pos => {
-              const newUserCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-              userLocationCircle.setCenter(newUserCoords);
-              if (!lastUserPosition || computeDistance(lastUserPosition, newUserCoords) > 10) {
-                lastUserPosition = newUserCoords;
-                requestDirections(newUserCoords);
-              }
-            },
-            err => console.error("Live geolocation error:", err.message),
-            { enableHighAccuracy: true }
-          );
-        } else {
-          console.error("Geolocation not supported.");
-          requestDirections(defaultOrigin);
         }
-      }
-
-      window.onclick = function(event) {
-        const modal = document.getElementById('route-modal');
-        if (event.target === modal) {
-          modal.style.display = 'none';
-        }
-      }
-    </script>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Directions to {{ destination }}</h1>
-      <div class="map-wrapper">
-        <div id="map"></div>
-        <div id="loading">Getting Directions.</div>
-      </div>
-      <div id="routes-list"></div>
-      <div id="live-info"></div>
-    </div>
     
-    <!-- Modal for route selection confirmation -->
-    <div id="route-modal" class="modal">
-      <div class="modal-content">
-        <span class="close" id="modal-close" onclick="closeModal()">&times;</span>
-        <p id="modal-text"></p>
-        <button id="confirm-route">Confirm Navigation</button>
-      </div>
-    </div>
-  </body>
-</html>
+        function requestDirections(origin) {
+          clearRenderers();
+          clearInfoWindows();
+          if (loadingOverlay) loadingOverlay.style.display = 'flex';
+    
+          directionsService.route({
+            origin,
+            destination,
+            travelMode: google.maps.TravelMode.WALKING,
+            provideRouteAlternatives: true
+          }, (result, status) => {
+            if (status === "OK") {
+              renderRoutes(result);
+            } else {
+              alert('Directions request failed due to ' + status);
+              if (loadingOverlay) loadingOverlay.style.display = 'none';
+            }
+          });
+        }
+    
+        function showRouteModal(index, distanceText, durationText) {
+          const modal = document.getElementById('route-modal');
+          document.getElementById('modal-text').innerHTML =
+            `Route ${index+1}: ${distanceText}, ${durationText}.<br>Start live navigation within our app?`;
+          modal.style.display = 'block';
+          document.getElementById('confirm-route').onclick = () => {
+            selectedRouteIndex = index;
+            liveNavigation = true;
+            document.getElementById('routes-list').style.display = 'none';
+            modal.style.display = 'none';
+            requestDirections(lastUserPosition || defaultOrigin);
+          };
+        }
+    
+        function closeModal() {
+          document.getElementById('route-modal').style.display = 'none';
+        }
+    
+        function computeDistance(c1, c2) {
+          const R = 6371000;
+          const toRad = x => x * Math.PI / 180;
+          const dLat = toRad(c2.lat - c1.lat), dLon = toRad(c2.lng - c1.lng);
+          const a = Math.sin(dLat/2) ** 2 + Math.cos(toRad(c1.lat)) * Math.cos(toRad(c2.lat)) * Math.sin(dLon/2) ** 2;
+          return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+    
+        function initMap() {
+          destination = {
+            lat: parseFloat('{{ destination_coords.0 }}'),
+            lng: parseFloat('{{ destination_coords.1 }}')
+          };
+          defaultOrigin = {
+            lat: parseFloat('{{ origin_coords.0 }}'),
+            lng: parseFloat('{{ origin_coords.1 }}')
+          };
+    
+          map = new google.maps.Map(document.getElementById('map'), {
+            center: destination,
+            zoom: 13
+          });
+    
+          loadingOverlay = document.getElementById('loading');
+          loadingInterval = setInterval(() => {
+            if (loadingOverlay && loadingOverlay.style.display !== 'none') {
+              let dots = (loadingOverlay.innerText.match(/\./g) || []).length;
+              loadingOverlay.innerText = "Getting Directions" + ".".repeat((dots + 1) % 4);
+            }
+          }, 500);
+    
+          userLocationCircle = new google.maps.Circle({
+            map,
+            radius: 20,
+            fillColor: '#0000FF',
+            fillOpacity: 0.5,
+            strokeColor: '#0000FF',
+            strokeOpacity: 0.8,
+            strokeWeight: 2
+          });
+    
+          directionsService = new google.maps.DirectionsService();
+    
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              pos => {
+                lastUserPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                map.setCenter(lastUserPosition);
+                requestDirections(lastUserPosition);
+              },
+              err => {
+                console.error("Geolocation error:", err.message);
+                requestDirections(defaultOrigin);
+              }
+            );
+            navigator.geolocation.watchPosition(
+              pos => {
+                const newCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                userLocationCircle.setCenter(newCoords);
+                if (!lastUserPosition || computeDistance(lastUserPosition, newCoords) > 10) {
+                  lastUserPosition = newCoords;
+                  requestDirections(newCoords);
+                }
+              },
+              err => console.error("Live geolocation error:", err.message),
+              { enableHighAccuracy: true }
+            );
+          } else {
+            console.error("Geolocation not supported.");
+            requestDirections(defaultOrigin);
+          }
+        }
+    
+        window.onload = function () {
+          if (typeof google === "undefined" || typeof google.maps === "undefined") {
+            console.error("Google Maps failed to load.");
+            document.getElementById("loading").innerText = "Failed to load map.";
+            return;
+          }
+          initMap();
+        };
+    
+        window.onclick = function(e) {
+          const modal = document.getElementById('route-modal');
+          if (e.target === modal) closeModal();
+        };
+      </script>
+    </body>
+    </html>
+    

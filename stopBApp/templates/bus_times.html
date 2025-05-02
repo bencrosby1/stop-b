@@ -85,7 +85,7 @@
     <div id="tab1" class="tab-content active">
         <input type="text" id="stop-id" placeholder="e.g., 2838">
         <button class="view-btn" onclick="fetchBusTimes()">View Bus Times</button>
-
+        <button class="view-btn" onclick="getDirections()">Get Directions</button>
         <h3>Upcoming Buses:</h3>
         <table>
             <thead>
@@ -140,6 +140,32 @@
                     });
                 });
         }
+
+        function getDirections() {
+            const stopId = document.getElementById("stop-id").value.trim();
+            if (!stopId) {
+                alert("Please enter a valid Stop ID.");
+                return;
+            }
+
+            fetch(`/get_stop_coordinates/?stop_id=${encodeURIComponent(stopId)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                    const { lat, lon } = data;
+                    // Relative URL uses current host/port automatically
+                    const url = `/directions/?destination=${lat},${lon}`;
+                    window.open(url, "_blank");
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Error fetching coordinates.");
+                });
+        }
+
     </script>
 
     
