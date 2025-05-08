@@ -41,14 +41,14 @@ urlpatterns = [
     path('account/', views.Account.as_view(), name='account'),
     path('delete/', views.DeleteAccount, name='delete_account'),
     path('edit_password/', views.EditPassword, name='edit_password'),
-    path('directions/"', views.Directions.as_view(), name='directions'),
+    path('directions/', views.Directions.as_view(), name='directions'),
     path('bus-times/', bus_times_views.bus_times_page, name='bus-times-page'),
     path('bus-times/<str:stop_id>/', bus_times_views.get_bus_times, name='bus-times'),
     path('get_nearby_stops/', get_nearby_stops, name='get_nearby_stops'),
-    ######################################################################
     path('active-detours/', active_detours, name='active_detours'),
     path('save-bus-line/<str:bus_line_id>/', save_bus_line, name='save_bus_line'),
     path('unsave-bus-line/<str:bus_line_id>/', unsave_bus_line, name='unsave_bus_line'),
     path('saved-bus-lines/', saved_lines, name='saved_bus_lines'),
+    path('get_stop_coordinates/', views.get_stop_coordinates, name='get_stop_coordinates'),
 ]
 

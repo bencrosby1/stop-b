@@ -5,3 +5,4 @@ from .register_views import Register
 from .stopnav_view import location
 from .account_views import Account, DeleteAccount, EditPassword
 from .directions_views import Directions
+from .coords_views import get_stop_coordinates
